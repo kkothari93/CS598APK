@@ -102,8 +102,8 @@ def chebdif(N,M):
 
     DM = np.zeros((M,N,N))
     
-    n1 = N/2; n2 = int(round(N/2.))     # indices used for flipping trick
-    k = np.arange(N)                    # compute theta vector
+    n1 = N//2; n2 = int(np.ceil(N/2.))     # indices used for flipping trick
+    k = np.arange(N)                        # compute theta vector
     th = k*np.pi/(N-1)
 
     # Compute the Chebyshev points
@@ -137,3 +137,5 @@ def chebdif(N,M):
 
     return DM
 
+if __name__ == '__main__':
+    p = chebdif(5, 1)

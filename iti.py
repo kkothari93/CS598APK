@@ -5,12 +5,12 @@ __author__ = "Konik Kothari"
 
 import numpy as np
 import matplotlib.pyplot as plt
-from Chebdiff import chebdif
+from chebDiff import chebdif
 
 
 class Box(object):
 
-    def __init__(self, sw_c, ne_c, b, k=40, id_=0):
+    def __init__(self, sw_c, ne_c, b, isLeaf= False, k=40, id_=0):
         self.id = id_
         self.sw_c = sw_c if type(sw_c) is np.ndarray else np.array(sw_c)
         self.ne_c = ne_c if type(ne_c) is np.ndarray else np.array(ne_c)
@@ -18,19 +18,24 @@ class Box(object):
 
         self.pot = b
         self.k = k
+        self.isLeaf = isLeaf
 
-        self._p = 16  # Size of cheb grid
-        self._q = 14  # Size of Gauss-grid
+        if 1:
+            self._p = 16  # Size of cheb grid
+            self._q = 14  # Size of Gauss-grid
 
-        self.cheb_grid = self._build_cheb_grid()
-        self.gauss_grid = self._build_gauss_edges()
-        self._plot_grid(self.cheb_grid)
+            self.cheb_grid = self._build_cheb_grid()
+            self.gauss_grid = self._build_gauss_edges()
+            # self._plot_grid(self.gauss_grid)
 
-    def _ccw_ordering(self, pts, mp, x):
+        return 
+
+    def _ccw_ordering(self, pts, mp, x, q):
         ''' Common ccw ordering of boundary points abstracted as a separate
         function in order to maximize reusability
 
         '''
+
         # south edge
         pts[0, :q-1] = mp[0] + x[:-1]
         pts[1, :q-1] = mp[1] + x[0]
@@ -47,7 +52,7 @@ class Box(object):
         pts[0, 3*(q-1):4*(q-1)] = mp[0] + x[0]
         pts[1, 3*(q-1):4*(q-1)] = mp[1] + x[::-1][:-1]
 
-        return
+        return None
 
     def _build_cheb_grid(self):
         """ Returns a p x p Chebyshev grid
@@ -59,7 +64,7 @@ class Box(object):
         mp = (self.sw_c+self.ne_c)/2
         pts = np.zeros((2, p*p))
 
-        self._ccw_ordering(pts, mp, xj)
+        self._ccw_ordering(pts, mp, xj, p)
         self.js = np.arange(p-1)
         self.je = np.arange(p-1) + p-1
         self.jn = np.arange(p-1) + 2*(p-1)
@@ -80,17 +85,31 @@ class Box(object):
 
     def _build_gauss_edges(self):
         q = self._q
-        x, w = np.polynomial.legendre.leggauss(q)
+        x, _ = np.polynomial.legendre.leggauss(q)
 
         # scale to our case
         # leggauss gives points on interval [-1,1]
         # (i.e. of length 2). Our box has side length 2*h
         # and midpoint non-zero.
         x = x/2*2*abs(self.h)
-        pts = np.zeros((2, 4*(q-1)))
+        pts = np.zeros((2, 4*q))
         mp = (self.sw_c+self.ne_c)/2
 
-        self._ccw_ordering(pts, mp, x)
+        # south edge
+        pts[0, :q] = mp[0] + x
+        pts[1, :q] = self.sw_c[1]
+
+        # east edge
+        pts[0, q:2*q] = self.ne_c[0]
+        pts[1, q:2*q] = mp[1] + x
+
+        # north edge
+        pts[0, 2*q:3*q] = mp[0] + x[::-1]
+        pts[1, 2*q:3*q] = self.ne_c[1]
+
+        # west edge
+        pts[0, 3*q:4*q] = self.sw_c[0]
+        pts[1, 3*q:4*q] = mp[1] + x[::-1]
 
         return pts
 
@@ -113,7 +132,7 @@ class Box(object):
         jw = np.arange(p-1, 0, -1)*p
 
         jb = np.concatenate((js, je, jn, jw))
-        print(jb)
+        # print(jb)
 
         # now find interior indices
         ji = [i*p+j for i in range(1, p-1) for j in range(1, p-1)]
@@ -132,7 +151,7 @@ class Box(object):
 
         return A
 
-    def _build_ops(self):
+    def build_ops(self):
         p = self._p
         D = chebdif(p, 1)
         D = D.reshape((p, p))/abs(self.h)
@@ -154,7 +173,7 @@ class Box(object):
         B = np.vstack((F, A[self.ji, :]))
 
         # Solution matrix
-        X = np.linalg.inv(B) @ np.vstack((np.eye(4*p-4), np.zeros(p*p, 4*p-4)))
+        X = np.linalg.inv(B) @ np.vstack((np.eye(4*p-4), np.zeros(((p-2)**2, 4*p-4))))
 
         # Cheb to Gauss mapping
         # ?? Don't know yet
@@ -180,11 +199,13 @@ class Box(object):
         for i, pt in enumerate(grid.T):
             ax.annotate(str(i), (pt[0], pt[1]))
 
+        plt.show()
         return
 
 
 def test():
-    a = Box((-0.5, -0.5), (0.5, 0.5), bump)
+    from ititree import potfn
+    a = Box((-0.5, -0.5), (0.5, 0.5), potfn, isLeaf=True)
     return a
 
 if __name__ == "__main__":
