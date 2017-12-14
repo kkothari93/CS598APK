@@ -1,0 +1,384 @@
+% Adrianna's then Alex's macros for ItI scatt paper
+
+
+
+\newcommand{\pvct}[1]{\bm{#1}}
+
+\newcommand{\vct}[1]{\bm{\mathsf{#1}}}
+
+\newcommand{\pcc}{\pvct{c}}
+
+\newcommand{\pxx}{\pvct{x}}
+
+\newcommand{\pyy}{\pvct{y}}
+
+\newcommand{\pzz}{\pvct{z}}
+
+\newcommand{\uu}{\vct{u}}
+
+\newcommand{\www}{\vct{w}}
+
+
+\newcommand{\F}{f}               % f , imp data in          Alex
+
+\newcommand{\G}{g}               % g , imp data out
+
+\newcommand{\sss}{\vct{f}}        % f, imp data in, vec
+
+\newcommand{\ww}{\vct{g}}          % g, imp data out, vec
+
+
+
+\newcommand{\vv}{\vct{v}}
+
+\newcommand{\tqq}{\tilde{\vct{q}}}
+
+\newcommand{\ff}{\vct{f}}
+
+\newcommand{\tff}{\tilde{\vct{f}}}
+
+\renewcommand{\AA}{\mtx{A}}
+
+\newcommand{\tAA}{\tilde{\mtx{A}}}
+
+\newcommand{\BB}{\mtx{B}}
+
+\newcommand{\CC}{\mtx{C}}
+
+\newcommand{\DD}{\mtx{D}}
+
+\newcommand{\hatDD}{\hat{\mtx{D}}}
+
+\renewcommand{\SS}{\mtx{S}}
+
+\newcommand{\LL}{\mtx{L}}
+
+\newcommand{\TT}{\mtx{T}}
+
+\newcommand{\UU}{\mtx{U}}
+
+\newcommand{\VV}{\mtx{V}}
+
+\newcommand{\WW}{\mtx{W}}
+
+\newcommand{\XX}{\mtx{X}}
+
+
+
+%\newcommand{\mtx}[1]{\mathsf{#1}}
+
+\newcommand{\mtx}[1]{\bm{\mathsf{#1}}}
+
+\newcommand{\bfm}[1]{\mbox{\boldmath ${#1}$}}
+
+\newcommand{\adj}{*}
+
+\newcommand{\mtwo}[4]{\left[\begin{array}{cc} #1 & #2 \\ #3 & #4 \end{array}\right]}
+
+\newcommand{\vtwo}[2]{\left[\begin{array}{cc} #1 \\ #2 \end{array}\right]}
+
+\newcommand{\compi}{{\rm i}}
+
+
+
+% \newtheorem{thm}{Theorem}[section]
+
+% \newtheorem{lemma}[thm]{Lemma}
+
+% \newtheorem{prop}[thm]{Proposition}
+
+% \newtheorem{corollary}[thm]{Corollary}
+
+% \newtheorem{remark}{Remark}
+
+% \theoremstyle{definition}
+
+% \newtheorem{definition}{Definition}
+
+% \newtheorem{question}{\sf\textbf{Question}}
+
+% \newtheorem{example}{Example}
+
+% \numberwithin{equation}{chapter}
+
+% \numberwithin{section}{chapter}
+
+% \numberwithin{remark}{chapter}
+
+% \numberwithin{figure}{chapter}
+
+
+
+%\newcommand{\pgnotate}[1]{{\color{blue}[#1]}}
+
+\newcommand{\pgnotate}[1]{}
+
+\newcommand{\term}[1]{\textit{#1}}
+
+\newcommand{\bigO}{\mathrm{O}}
+
+\newcommand{\emphr}[1]{\textit{\color{red}#1}}
+
+\newcommand{\bfb}[1]{\textbf{\color{blue}#1}}
+
+
+
+\newcommand{\pgrule}{\mbox{}\\ \rule{\textwidth}{0.5pt} \\}
+
+\newcommand{\lsp}{\vspace{3mm}}
+
+
+
+\newcommand{\mA}{\mtx{A}}
+
+\newcommand{\mB}{\mtx{B}}
+
+\newcommand{\mC}{\mtx{C}}
+
+\newcommand{\mD}{\mtx{D}}
+
+\newcommand{\mE}{\mtx{E}}
+
+\newcommand{\mF}{\mtx{F}}
+
+\newcommand{\mG}{\mtx{G}}
+
+\newcommand{\mH}{\mtx{H}}
+
+\newcommand{\mX}{\mtx{X}}
+
+\newcommand{\mY}{\mtx{Y}}
+
+\newcommand{\mZ}{\mtx{Z}}
+
+\newcommand{\mhA}{\hat{\mtx{A}}}
+
+\newcommand{\mhB}{\hat{\mtx{B}}}
+
+\newcommand{\mhC}{\hat{\mtx{C}}}
+
+\newcommand{\mhD}{\hat{\mtx{D}}}
+
+\newcommand{\mhE}{\hat{\mtx{E}}}
+
+\newcommand{\mhF}{\hat{\mtx{F}}}
+
+\newcommand{\mhG}{\hat{\mtx{G}}}
+
+\newcommand{\mhH}{\hat{\mtx{H}}}
+
+\newcommand{\mhX}{\hat{\mtx{X}}}
+
+\newcommand{\mhY}{\hat{\mtx{Y}}}
+
+\newcommand{\mhZ}{\hat{\mtx{Z}}}
+
+\newcommand{\mtA}{\tilde{\mtx{A}}}
+
+\newcommand{\mtB}{\tilde{\mtx{B}}}
+
+\newcommand{\mtC}{\tilde{\mtx{C}}}
+
+\newcommand{\mtD}{\tilde{\mtx{D}}}
+
+\newcommand{\mtE}{\tilde{\mtx{E}}}
+
+\newcommand{\mtF}{\tilde{\mtx{F}}}
+
+\newcommand{\mtG}{\tilde{\mtx{G}}}
+
+\newcommand{\mtH}{\tilde{\mtx{H}}}
+
+\newcommand{\mtX}{\tilde{\mtx{X}}}
+
+\newcommand{\mtY}{\tilde{\mtx{Y}}}
+
+\newcommand{\mtZ}{\tilde{\mtx{Z}}}
+
+\newcommand{\muA}{\underline{\mtx{A}}}
+
+\newcommand{\muB}{\underline{\mtx{B}}}
+
+\newcommand{\muC}{\underline{\mtx{C}}}
+
+\newcommand{\muD}{\underline{\mtx{D}}}
+
+\newcommand{\muE}{\underline{\mtx{E}}}
+
+\newcommand{\muF}{\underline{\mtx{F}}}
+
+\newcommand{\muG}{\underline{\mtx{G}}}
+
+\newcommand{\muH}{\underline{\mtx{H}}}
+
+\newcommand{\muX}{\underline{\mtx{X}}}
+
+\newcommand{\muY}{\underline{\mtx{Y}}}
+
+\newcommand{\muZ}{\underline{\mtx{Z}}}
+
+\newcommand{\mutB}{\underline{\tilde{\mtx{B}}}}
+
+
+
+
+
+% \newcommand{\lsp}{\vspace{3mm}}
+
+% \newcommand{\vtwo}[2]{\left[\begin{array}{c} #1 \\ #2 \end{array}\right]}
+
+% \newcommand{\vthree}[3]{\left[\begin{array}{c} #1 \\ #2 \\ #3 \end{array}\right]}
+
+% \newcommand{\vfour}[4]{\left[\begin{array}{c} #1 \\ #2 \\ #3 \\ #4 \end{array}\right]}
+
+% \newcommand{\mtwo}[4]{\left[\begin{array}{cc} #1 & #2 \\ #3 & #4  \end{array}\right]}
+
+% \newcommand{\mthree}[9]{\left[\begin{array}{ccc} #1 & #2 & #3 \\
+
+%                                                  #4 & #5 & #6 \\
+
+%                                                  #7 & #8 & #9 \end{array}\right]}
+
+% \newcommand{\bip}[2]{\left\langle #1,#2 \right\rangle}
+
+% \newcommand{\trip}[3]{\left\langle #1,#2,#3 \right\rangle}
+
+%\renewcommand{\choose}[2]{\left(\!\!\!\begin{array}{c} #1 \\ #2 \end{array}\!\!\!\right)}
+
+
+
+
+
+\newcommand{\sectionheader}[1]{\textit{\textbf{#1:}}}
+
+
+
+
+
+\newcommand{\ngauss}{q}
+
+\newcommand{\ncheb}{p}
+
+
+
+% Alex's macros....
+
+\newcommand{\bi}{\begin{itemize}}
+
+\newcommand{\ei}{\end{itemize}}
+
+\newcommand{\ben}{\begin{enumerate}}
+
+\newcommand{\een}{\end{enumerate}}
+
+\newcommand{\be}{\begin{equation}}
+
+\newcommand{\ee}{\end{equation}}
+
+\newcommand{\bea}{\begin{eqnarray}}
+
+\newcommand{\eea}{\end{eqnarray}}
+
+\newcommand{\ba}{\begin{align}}
+
+\newcommand{\ea}{\end{align}}
+
+\newcommand{\bse}{\begin{subequations}}
+
+\newcommand{\ese}{\end{subequations}}
+
+\newcommand{\bc}{\begin{center}}
+
+\newcommand{\ec}{\end{center}}
+
+\newcommand{\bfi}{\begin{figure}}
+
+\newcommand{\efi}{\end{figure}}
+
+\newcommand{\ca}[2]{\caption{#1 \label{#2}}}
+
+\newcommand{\ig}[2]{\includegraphics[#1]{#2}}
+
+\newcommand{\bmp}[1]{\begin{minipage}{#1}}
+
+\newcommand{\emp}{\end{minipage}}
+
+\newcommand{\pig}[2]{\bmp{#1}\includegraphics[width=#1]{#2}\emp} % mp-fig, nogap
+
+\newcommand{\bp}{\begin{proof}}
+
+\newcommand{\ep}{\end{proof}}
+
+\newcommand{\ie}{{\it i.e.\ }}
+
+\newcommand{\eg}{{\it e.g.\ }}
+
+\newcommand{\etal}{{\it et al.\ }}
+
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
+
+\newcommand{\pdc}[3]{\left. \frac{\partial #1}{\partial #2}\right|_{#3}}
+
+\newcommand{\infint}{\int_{-\infty}^{\infty} \!\!}      % infinite integral
+
+\newcommand{\tbox}[1]{{\mbox{\tiny #1}}}
+
+\newcommand{\mbf}[1]{{\mathbf #1}}
+
+\newcommand{\half}{\mbox{\small $\frac{1}{2}$}}
+
+\newcommand{\C}{\mathbb{C}}
+
+\newcommand{\R}{\mathbb{R}}
+
+\newcommand{\RR}{\mathbb{R}^2}
+
+\DeclareMathOperator{\Span}{Span}
+
+\DeclareMathOperator{\im}{Im}
+
+\DeclareMathOperator{\re}{Re}
+
+
+
+% this work ...
+
+\newcommand{\pO}{{\partial\Omega}}
+
+\newcommand{\Ng}{\ngauss}
+
+\newcommand{\Nc}{\ncheb}
+
+\newcommand{\om}{\omega} % wavenumber
+
+%\newcommand{\xx}{\mbf{x}}   % x location
+%\newcommand{\yy}{\mbf{y}}   % x location
+\newcommand{\xx}{\pvct{x}}   % x location
+\newcommand{\yy}{\pvct{y}}   % x location
+
+\newcommand{\ui}{u^\tbox{i}}   % incident (gunnar's v)
+
+\newcommand{\us}{u^\tbox{s}}   % scattered (gunnar's w)
+
+\newcommand{\Oc}{\RR \backslash \Omega}  % complement of Omega
+
+\newcommand{\dtn}{T}
+
+\newcommand{\iti}{R}
+
+\newcommand{\ub}{u|_\pO}   % bdry trace of u
+
+\newcommand{\mpspack}{{\tt MPSpack}}
+
+\newcommand{\Oe}{\R^d\backslash\overline{\Omega}}  % exterior domain
+
+\newcommand{\Dx}{{\mtx{D}^{(1)}}}  % diff matrices
+
+\newcommand{\Dy}{{\mtx{D}^{(2)}}}
+
+\newcommand{\NN}{{\mtx{N}}}
+
+\newcommand{\itim}{\mtx{\iti}}
+
+\newcommand{\dtnm}{\mtx{\dtn}}
+
