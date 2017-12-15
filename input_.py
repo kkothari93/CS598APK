@@ -1,6 +1,6 @@
 # Input functions
 # Boundary conditions
-
+import numpy as np
 
 class PlaneWave:
 	"""Implements a plane wave class"""

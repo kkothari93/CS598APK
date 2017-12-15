@@ -6,11 +6,12 @@ __author__ = "Konik Kothari"
 import numpy as np
 import matplotlib.pyplot as plt
 from chebDiff import chebdif
+import scipy.interpolate
 
 
 class Box(object):
 
-    def __init__(self, sw_c, ne_c, b, isLeaf= False, k=40, id_=0):
+    def __init__(self, sw_c, ne_c, b, isLeaf=False, k=40, id_=0):
         self.id = id_
         self.sw_c = sw_c if type(sw_c) is np.ndarray else np.array(sw_c)
         self.ne_c = ne_c if type(ne_c) is np.ndarray else np.array(ne_c)
@@ -28,7 +29,7 @@ class Box(object):
             self.gauss_grid = self._build_gauss_edges()
             # self._plot_grid(self.gauss_grid)
 
-        return 
+        return
 
     def _ccw_ordering(self, pts, mp, x, q):
         ''' Common ccw ordering of boundary points abstracted as a separate
@@ -56,7 +57,10 @@ class Box(object):
 
     def _build_cheb_grid(self):
         """ Returns a p x p Chebyshev grid
-        :param p (Default=16)
+        Input
+        -----
+        p : int
+        Number of Chebyshev points (Default=16)
         """
         p = self._p
         j = np.arange(p) + 1
@@ -98,18 +102,22 @@ class Box(object):
         # south edge
         pts[0, :q] = mp[0] + x
         pts[1, :q] = self.sw_c[1]
+        self.jsg = np.arange(q)
 
         # east edge
         pts[0, q:2*q] = self.ne_c[0]
         pts[1, q:2*q] = mp[1] + x
+        self.jeg = np.arange(q,2*q)
 
         # north edge
         pts[0, 2*q:3*q] = mp[0] + x[::-1]
         pts[1, 2*q:3*q] = self.ne_c[1]
-
+        self.jng = np.arange(2*q,3*q)
+        
         # west edge
         pts[0, 3*q:4*q] = self.sw_c[0]
         pts[1, 3*q:4*q] = mp[1] + x[::-1]
+        self.jwg = np.arange(3*q,4*q)
 
         return pts
 
@@ -151,6 +159,39 @@ class Box(object):
 
         return A
 
+    def interpolation(self, xt, xs, eps=1e-10):
+        """Constructs the interpolation matrix 
+        from xt (target) to xs (source) points
+
+        Returns a numpy.ndarray of shape 
+            len(xt) $$\times$$  len(xs)
+        """
+        p, q = map(len, [xt, xs])
+
+        # lp --> Basis function derivative
+        g = xs[:, None] - xs
+        np.fill_diagonal(g, 1)
+        lp = np.prod(g, axis=1)
+        # w --> weights per source pt
+        w = 1.0/lp
+
+        # dts --> distance from target to source
+        dts = xt[:, None]-xs
+
+        # lagrange basis polynomial
+        l = np.prod(dts, axis=1)
+
+        # lagrange interpolation matrix
+        # reshape required for numpy broadcast
+        L = l.reshape(-1, 1) * (1/dts) * w
+
+        # if xt and xs are very close
+        # no need to interpolate
+        problempts = np.abs(dts) < eps
+        L[problempts] = 1
+
+        return L
+
     def build_ops(self):
         p = self._p
         D = chebdif(p, 1)
@@ -173,12 +214,24 @@ class Box(object):
         B = np.vstack((F, A[self.ji, :]))
 
         # Solution matrix
-        X = np.linalg.inv(B) @ np.vstack((np.eye(4*p-4), np.zeros(((p-2)**2, 4*p-4))))
+        X = np.linalg.inv(B) @ np.vstack((
+            np.eye(4*p-4),
+            np.zeros(((p-2)**2, 4*p-4)))
+        )
+
+        # Gauss to Cheb mapping
+        P = self.interpolation(self.cheb_grid[0][:self._p],
+                               self.gauss_grid[0][:self._q])
+        
+        self.P = np.kron(np.eye(4),P[:-1, :])
 
         # Cheb to Gauss mapping
-        # ?? Don't know yet
-        # Y = X @ P
+        self.Q = self.interpolation(self.gauss_grid[0][:self._q],
+                               self.cheb_grid[0][:self._p])
 
+        Y = X @ self.P
+
+        # gauss will use both end points
         jsp = np.append(self.js, self.je[0])
         jep = np.append(self.je, self.jn[0])
         jnp = np.append(self.jn, self.jw[0])
@@ -187,9 +240,9 @@ class Box(object):
         G = np.vstack((-Dy[jsp, :], Dx[jep, :], Dy[jnp, :], -
                        Dx[jwp, :])) - 1j*self.k*np.eye(p*p)[jbp, :]
 
-        # R = Q @ G @ Y
-        # self.R = R
-        return 
+        self.R = np.kron(np.eye(4), self.Q) @ G @ Y
+
+        return
 
     def _plot_grid(self, grid):
         """Plot a grid of points"""
@@ -208,5 +261,20 @@ def test():
     a = Box((-0.5, -0.5), (0.5, 0.5), potfn, isLeaf=True)
     return a
 
+
+def test_interp():
+    j = np.arange(16) + 1
+    xt = ((np.cos(np.pi*(j-1)/8)[::-1]) + 1)/2.0
+    xs, _ = np.polynomial.legendre.leggauss(14)
+    xs = (xs+1)/2
+    ans = interpolation(xt, xs)
+    y = xs**2
+    yp = ans @ y
+    plt.plot(xs, y)
+    plt.plot(xt, yp, 'r')
+    plt.show()
+
+
 if __name__ == "__main__":
-    a = test()
+    # a = test()
+    test_interp()
