@@ -13,6 +13,10 @@ def potfn(x):
 
 
 class BoxTree(object):
+    """
+    Tree object to solve interior variable media 
+    Helmholtz Dirichlet problem
+    """
 
     BoxList = []  # to get a list access for algo 1 later on
 

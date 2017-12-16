@@ -15,7 +15,8 @@ class Box(object):
         self.id = id_
         self.sw_c = sw_c if type(sw_c) is np.ndarray else np.array(sw_c)
         self.ne_c = ne_c if type(ne_c) is np.ndarray else np.array(ne_c)
-        self.h = -(ne_c[0]-sw_c[0])/2
+        self.hx = -(ne_c[0]-sw_c[0])/2
+        self.hy = -(ne_c[1]-sw_c[1])/2
 
         self.pot = b
         self.k = k
@@ -27,11 +28,11 @@ class Box(object):
 
             self.cheb_grid = self._build_cheb_grid()
             self.gauss_grid = self._build_gauss_edges()
-            # self._plot_grid(self.gauss_grid)
+            self._plot_grid(self.cheb_grid)
 
         return
 
-    def _ccw_ordering(self, pts, mp, x, q):
+    def _ccw_ordering(self, pts, mp, x, y, q):
         ''' Common ccw ordering of boundary points abstracted as a separate
         function in order to maximize reusability
 
@@ -39,19 +40,19 @@ class Box(object):
 
         # south edge
         pts[0, :q-1] = mp[0] + x[:-1]
-        pts[1, :q-1] = mp[1] + x[0]
+        pts[1, :q-1] = mp[1] + y[0]
 
         # east edge
         pts[0, q-1:2*(q-1)] = mp[0] + x[-1]
-        pts[1, q-1:2*(q-1)] = mp[1] + x[:-1]
+        pts[1, q-1:2*(q-1)] = mp[1] + y[:-1]
 
         # north edge
         pts[0, 2*(q-1):3*(q-1)] = mp[0] + x[::-1][:-1]
-        pts[1, 2*(q-1):3*(q-1)] = mp[1] + x[-1]
+        pts[1, 2*(q-1):3*(q-1)] = mp[1] + y[-1]
 
         # west edge
         pts[0, 3*(q-1):4*(q-1)] = mp[0] + x[0]
-        pts[1, 3*(q-1):4*(q-1)] = mp[1] + x[::-1][:-1]
+        pts[1, 3*(q-1):4*(q-1)] = mp[1] + y[::-1][:-1]
 
         return None
 
@@ -64,11 +65,12 @@ class Box(object):
         """
         p = self._p
         j = np.arange(p) + 1
-        xj = self.h*np.cos(np.pi*(j-1)/(p-1))
+        xx = self.hx*np.cos(np.pi*(j-1)/(p-1))
+        yy = self.hy*np.cos(np.pi*(j-1)/(p-1))
         mp = (self.sw_c+self.ne_c)/2
         pts = np.zeros((2, p*p))
 
-        self._ccw_ordering(pts, mp, xj, p)
+        self._ccw_ordering(pts, mp, xx, yy, p)
         self.js = np.arange(p-1)
         self.je = np.arange(p-1) + p-1
         self.jn = np.arange(p-1) + 2*(p-1)
@@ -80,8 +82,8 @@ class Box(object):
         for i in range(p-2):
             for j in range(p-2):
 
-                pts[0, 4*(p-1)+i*(p-2)+j] = mp[0] + xj[j+1]
-                pts[1, 4*(p-1)+i*(p-2)+j] = mp[1] + xj[i+1]
+                pts[0, 4*(p-1)+i*(p-2)+j] = mp[0] + xx[j+1]
+                pts[1, 4*(p-1)+i*(p-2)+j] = mp[1] + yy[i+1]
 
         self.ji = np.arange(4*(p-1), p*p)
 
@@ -95,28 +97,29 @@ class Box(object):
         # leggauss gives points on interval [-1,1]
         # (i.e. of length 2). Our box has side length 2*h
         # and midpoint non-zero.
-        x = x/2*2*abs(self.h)
+        xx = x/2*2*abs(self.hx)
+        yy = x/2*2*abs(self.hy)
         pts = np.zeros((2, 4*q))
         mp = (self.sw_c+self.ne_c)/2
 
         # south edge
-        pts[0, :q] = mp[0] + x
+        pts[0, :q] = mp[0] + xx
         pts[1, :q] = self.sw_c[1]
         self.jsg = np.arange(q)
 
         # east edge
         pts[0, q:2*q] = self.ne_c[0]
-        pts[1, q:2*q] = mp[1] + x
+        pts[1, q:2*q] = mp[1] + yy
         self.jeg = np.arange(q,2*q)
 
         # north edge
-        pts[0, 2*q:3*q] = mp[0] + x[::-1]
+        pts[0, 2*q:3*q] = mp[0] + xx[::-1]
         pts[1, 2*q:3*q] = self.ne_c[1]
         self.jng = np.arange(2*q,3*q)
         
         # west edge
         pts[0, 3*q:4*q] = self.sw_c[0]
-        pts[1, 3*q:4*q] = mp[1] + x[::-1]
+        pts[1, 3*q:4*q] = mp[1] + yy[::-1]
         self.jwg = np.arange(3*q,4*q)
 
         return pts
