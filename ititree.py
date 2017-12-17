@@ -9,6 +9,7 @@ from iti import Box
 
 
 def potfn(x):
+    """Insert fav potential function over domain here"""
     return np.exp(-160*np.linalg.norm(x, axis=0)**2)
 
 
@@ -20,8 +21,8 @@ class BoxTree(object):
 
     BoxList = []  # to get a list access for algo 1 later on
 
-    def __init__(self, sw_c, ne_c, b = potfn, id_=0, levels=4, tic=1):
-        self.root = Box(sw_c, ne_c, b, isLeaf = levels==0)
+    def __init__(self, sw_c, ne_c, b=potfn, id_=0, levels=4, tic=1):
+        self.root = Box(sw_c, ne_c, b, isLeaf=levels == 0)
         self.BoxList.append(self)
         self.id_ = id_
         self.__levels = levels
@@ -30,13 +31,26 @@ class BoxTree(object):
             self.isLeaf = False
         else:
             self.isLeaf = True
-
+    
+    def __hash__(self):
+        return self.id_
+    
+    def __str__(self):
+        return str(self.id_)
 
     def reset(self):
+        """short of implementing a boxlist class,
+        (as that is not required here), this 
+        function will erase the boxes generated
+        yet and regenerate a list from the instance 
+        it has been called. (i.e. the instance will 
+        become the root)
+
+        """
         self.BoxList = []
 
         from collections import deque
-        
+
         q = deque([])
         node = self.root
         if node is not None:
@@ -51,40 +65,44 @@ class BoxTree(object):
                 node = None
         return self
 
-
     def _divide(self, tic):
+        """Divides cells and builds the indices"""
         sw_c = self.root.sw_c
         ne_c = self.root.ne_c
         if tic:
-            # vertical split
+            # vertical line split
             alpha = BoxTree(sw_c, ((sw_c[0]+ne_c[0])/2.0, ne_c[1]),
                             id_=2*self.id_+1, levels=self.__levels - 1, tic=0)
             beta = BoxTree(((sw_c[0]+ne_c[0])/2, sw_c[1]), ne_c,
-                            id_=2*self.id_+2, levels=self.__levels - 1, tic=0)
+                           id_=2*self.id_+2, levels=self.__levels - 1, tic=0)
 
-            self.j1a = np.concatenate((alpha.root.jsg, alpha.root.jeg, alpha.root.jwg))
+            self.j1a = np.concatenate(
+                (alpha.root.jsg, alpha.root.jeg, alpha.root.jwg))
             self.j3a = alpha.root.jng
 
-            self.j2b = np.concatenate((beta.root.jeg, beta.root.jng, beta.root.jwg))
+            self.j2b = np.concatenate(
+                (beta.root.jeg, beta.root.jng, beta.root.jwg))
             self.j3b = beta.root.jsg
 
         else:
-            # horizontal split
+            # horizontal line split
             alpha = BoxTree(sw_c, (ne_c[0], (sw_c[1]+ne_c[1])/2.0),
                             id_=2*self.id_+1, levels=self.__levels - 1, tic=1)
             beta = BoxTree((sw_c[0], (sw_c[1]+ne_c[1])/2.0), ne_c,
-                            id_=2*self.id_+2, levels=self.__levels - 1, tic=1)
+                           id_=2*self.id_+2, levels=self.__levels - 1, tic=1)
 
-            self.j1a = np.concatenate((alpha.root.jsg, alpha.root.jng, alpha.root.jwg))
+            self.j1a = np.concatenate(
+                (alpha.root.jsg, alpha.root.jng, alpha.root.jwg))
             self.j3a = alpha.root.jeg
 
-            self.j2b = np.concatenate((beta.root.jsg, beta.root.jeg, beta.root.jng))
+            self.j2b = np.concatenate(
+                (beta.root.jsg, beta.root.jeg, beta.root.jng))
             self.j3b = beta.root.jwg
 
         return alpha, beta
 
-
     def merge(self):
+        """Merges ops from children"""
         if self.isLeaf:
             return
         else:
@@ -99,14 +117,14 @@ class BoxTree(object):
             R33b = self.b.root.R[np.ix_(self.j3b, self.j3b)]
 
             W = np.linalg.inv(np.eye(len(R33a)) - R33b @ R33a)
-        
+
             WR33bR31a = W @ R33b @ R31a
             WR32b = W@R32b
-           
-            self.root.R = np.hstack((np.vstack((R11a + R13a @ WR33bR31a, 
-                                -R23b @ (R31a + R33a @ W @ R33b @ R31a))),
-                                np.vstack((-R13a @ WR32b, 
-                                R22b + R23b @ R33a @ WR32b))))
+
+            self.root.R = np.hstack((np.vstack((R11a + R13a @ WR33bR31a,
+                                                -R23b @ (R31a + R33a @ W @ R33b @ R31a))),
+                                     np.vstack((-R13a @ WR32b,
+                                                R22b + R23b @ R33a @ WR32b))))
             self.Sa = np.concatenate((WR33bR31a, -WR32b), axis=1)
             self.Sb = -np.concatenate((R31a + R33a @ WR33bR31a, -WR32b), axis=1)
 
@@ -117,10 +135,16 @@ class BoxTree(object):
         return
 
     def sort(self):
+        """Sorts boxes in boxlist by boxlist id
+        required as the current division method works
+        in dfs fashion
+        """
         self.BoxList.sort(key=lambda x: x.id_, reverse=False)
 
+
 def build_sol(a):
-    a.sort()
+    """Builds solution operator(Tint) for internal domain"""
+    a.sort() # needed so that ops merge proceed in right fashion
     for box in a.BoxList[::-1]:
         if box.isLeaf:
             box.root.build_ops()
@@ -131,23 +155,27 @@ def build_sol(a):
     root = a.BoxList[0].root
     I = np.eye(len(root.R))
     Tint = -1j*root.k*np.linalg.inv(root.R - I) @ (root.R + I)
-    print(a.BoxList[0].Sa.shape)
-    print(a.BoxList[0].Sb.shape)
     return Tint
 
 
-
 def solveBVP(a, f, u):
+    """Solve internal variable coeff BVP"""
     for box in a.BoxList:
         if box.isLeaf:
-            u[box.jt] = box.root.Y @ box.fT
+            print(box.fT.shape)
+            u[box.id_] = box.root.Y @ box.fT
         else:
-            box.a.fT = box.Sa @ f(box.cheb_grid)
-            box.b.fT = box.Sb @ f(box.cheb_grid)
-    return u
+            box.fT = np.concatenate((
+                f(box.a.root.gauss_grid[:, box.j1a]),
+                f(box.b.root.gauss_grid[:, box.j2b])),
+                axis=0)
+            box.a.fT = box.Sa @ box.fT
+            box.b.fT = box.Sb @ box.fT
+    return None
 
 
 def test():
+    """Tester will test build ops (Alg 1) of paper"""
     a = BoxTree((-0.5, -0.5), (0.5, 0.5))
     Tint = build_sol(a)
     print(Tint.shape)

@@ -10,9 +10,15 @@ import matplotlib.pyplot as plt
 # TODO: Index U and test external.py
 
 def main():
-	in_ = PlaneWave(40, np.array(([[1],[0]])))
+	in_ = PlaneWave(40, np.array([1+1j*0]))
 	a = BoxTree((-0.5, -0.5), (0.5, 0.5))
 	Tint = build_sol(a)
-	u = solveBVP(a, in_.f, u)
+	u = {}
+	solveBVP(a, in_.f, u)
+	print(u)
+
+if __name__ == '__main__':
+	main()
+
 
 

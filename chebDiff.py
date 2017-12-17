@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Dec  3 10:17:35 2017
-
-@author: konik
-"""
-
 import numpy as np
 import scipy as sp
 from scipy import sparse
@@ -12,7 +5,9 @@ from scipy.linalg import eig
 from scipy.linalg import toeplitz
 
 def chebdif(N,M):
-    '''    
+    '''
+    !!! Taken from the dms library
+
     Calculate differentiation matrices using Chebyshev collocation.
       
     Returns the differentiation matrices D1, D2, .. DM corresponding to the 

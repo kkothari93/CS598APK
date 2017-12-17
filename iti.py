@@ -10,8 +10,10 @@ import scipy.interpolate
 
 
 class Box(object):
+	"""Implements the box object"""
 
-    def __init__(self, sw_c, ne_c, b, isLeaf=False, k=40, id_=0):
+    def __init__(self, sw_c, ne_c, b, 
+    	p = 16, q = 14, isLeaf=False, k=40, id_=0):
         self.id = id_
         self.sw_c = sw_c if type(sw_c) is np.ndarray else np.array(sw_c)
         self.ne_c = ne_c if type(ne_c) is np.ndarray else np.array(ne_c)
@@ -22,21 +24,17 @@ class Box(object):
         self.k = k
         self.isLeaf = isLeaf
 
-        if 1:
-            self._p = 16  # Size of cheb grid
-            self._q = 14  # Size of Gauss-grid
+        self._p = p  # Size of cheb grid
+        self._q = q  # Size of Gauss-grid
 
-            self.cheb_grid = self._build_cheb_grid()
-            self.gauss_grid = self._build_gauss_edges()
-            self._plot_grid(self.cheb_grid)
+        self.cheb_grid = self._build_cheb_grid()
+        self.gauss_grid = self._build_gauss_edges()
+        # self._plot_grid(self.cheb_grid)
 
         return
 
     def _ccw_ordering(self, pts, mp, x, y, q):
-        ''' Common ccw ordering of boundary points abstracted as a separate
-        function in order to maximize reusability
-
-        '''
+        """ Numbers cheb grid according to scheme in paper"""
 
         # south edge
         pts[0, :q-1] = mp[0] + x[:-1]
@@ -57,12 +55,7 @@ class Box(object):
         return None
 
     def _build_cheb_grid(self):
-        """ Returns a p x p Chebyshev grid
-        Input
-        -----
-        p : int
-        Number of Chebyshev points (Default=16)
-        """
+        """ Returns a p x p Chebyshev grid """
         p = self._p
         j = np.arange(p) + 1
         xx = self.hx*np.cos(np.pi*(j-1)/(p-1))
@@ -90,6 +83,7 @@ class Box(object):
         return pts
 
     def _build_gauss_edges(self):
+    	""" Builds the edge gauss grid """
         q = self._q
         x, _ = np.polynomial.legendre.leggauss(q)
 
@@ -196,11 +190,12 @@ class Box(object):
         return L
 
     def build_ops(self):
+    	"""Generates ops for the box"""
         p = self._p
         D = chebdif(p, 1)
-        D = D.reshape((p, p))/abs(self.h)
-        Dx = self._permute(np.kron(np.eye(p), D))
-        Dy = self._permute(np.kron(D, np.eye(p)))
+        D = D.reshape((p, p))
+        Dx = self._permute(np.kron(np.eye(p), D))/abs(self.hx)
+        Dy = self._permute(np.kron(D, np.eye(p)))/abs(self.hy)
         DD = self._permute(np.diag(self.k**2 * (1 - self.pot(self.cheb_grid))))
 
         # wave operator
@@ -232,7 +227,7 @@ class Box(object):
         self.Q = self.interpolation(self.gauss_grid[0][:self._q],
                                self.cheb_grid[0][:self._p])
 
-        Y = X @ self.P
+        self.Y = X @ self.P
 
         # gauss will use both end points
         jsp = np.append(self.js, self.je[0])
@@ -243,12 +238,12 @@ class Box(object):
         G = np.vstack((-Dy[jsp, :], Dx[jep, :], Dy[jnp, :], -
                        Dx[jwp, :])) - 1j*self.k*np.eye(p*p)[jbp, :]
 
-        self.R = np.kron(np.eye(4), self.Q) @ G @ Y
+        self.R = np.kron(np.eye(4), self.Q) @ G @ self.Y
 
         return
 
     def _plot_grid(self, grid):
-        """Plot a grid of points"""
+        """Plot a grid of points with index label"""
         fig, ax = plt.subplots()
         ax.scatter(grid[0, :], grid[1, :])
 
@@ -260,12 +255,14 @@ class Box(object):
 
 
 def test():
+	"""Tests the box class"""
     from ititree import potfn
     a = Box((-0.5, -0.5), (0.5, 0.5), potfn, isLeaf=True)
     return a
 
 
 def test_interp():
+	"""Lagrange interpolation tester"""
     j = np.arange(16) + 1
     xt = ((np.cos(np.pi*(j-1)/8)[::-1]) + 1)/2.0
     xs, _ = np.polynomial.legendre.leggauss(14)
@@ -279,5 +276,5 @@ def test_interp():
 
 
 if __name__ == "__main__":
-    # a = test()
+    a = test()
     test_interp()
