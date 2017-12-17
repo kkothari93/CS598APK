@@ -23,12 +23,12 @@ class SqDomain(object):
 
     """
 
-    def __init__(self, swc, nec, npanels, nptsonbdry):
-        self.swc = swc
-        self.nec = nec
+    def __init__(self, btree, npanels, nptsonbdry):
+        self.swc = btree.root.sw_c
+        self.nec = btree.root.ne_c
         self._p = npanels
         self._N = nptsonbdry
-        self.n = np.ceil(self._N/self._p)
+        self.n = int(np.ceil(self._N/self._p))
         self.curvquad()
         return self
 
@@ -62,14 +62,16 @@ class SqDomain(object):
 
     def curvquad(self):
         # get Gauss points and weights
-        pts, w = np.polynomial.legendre.leggauss(10)
         # fit to [0,1]
+        p = self._p
+        n = self.n
+        pts, w = np.polynomial.legendre.leggauss(p)
         pts = pts*0.5 + 0.5
         w /= 2
-        se = 2*np.pi/self.n*np.arange(0, self.n+1)
-        self.weights = np.tile(w*2*np.pi/self.n, (self.n, 1))
-        s = np.zeros(self.n*self._p)
-        for i in xrange(n):
+        se = 2*np.pi/n*np.arange(0, n+1)
+        self.weights = np.tile(w*2*np.pi/n, (n, 1))
+        s = np.zeros(n*p)
+        for i in range(n):
             s[i*p:(i+1)*p] = se[i] + (se[i+1]-se[i])*pts
 
         self.s = s

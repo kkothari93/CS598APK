@@ -10,10 +10,10 @@ import scipy.interpolate
 
 
 class Box(object):
-	"""Implements the box object"""
+    """Implements the box object"""
 
-    def __init__(self, sw_c, ne_c, b, 
-    	p = 16, q = 14, isLeaf=False, k=40, id_=0):
+    def __init__(self, sw_c, ne_c, b, p, q, isLeaf=False, k=40, id_=0):
+
         self.id = id_
         self.sw_c = sw_c if type(sw_c) is np.ndarray else np.array(sw_c)
         self.ne_c = ne_c if type(ne_c) is np.ndarray else np.array(ne_c)
@@ -24,11 +24,12 @@ class Box(object):
         self.k = k
         self.isLeaf = isLeaf
 
-        self._p = p  # Size of cheb grid
-        self._q = q  # Size of Gauss-grid
+        if isLeaf:
+            self._p = p  # Size of cheb grid
+            self._q = q  # Size of Gauss-grid
 
-        self.cheb_grid = self._build_cheb_grid()
-        self.gauss_grid = self._build_gauss_edges()
+            self.cheb_grid = self._build_cheb_grid()
+            self.gauss_grid = self._build_gauss_edges()
         # self._plot_grid(self.cheb_grid)
 
         return
@@ -83,7 +84,7 @@ class Box(object):
         return pts
 
     def _build_gauss_edges(self):
-    	""" Builds the edge gauss grid """
+        """ Builds the edge gauss grid """
         q = self._q
         x, _ = np.polynomial.legendre.leggauss(q)
 
@@ -104,17 +105,17 @@ class Box(object):
         # east edge
         pts[0, q:2*q] = self.ne_c[0]
         pts[1, q:2*q] = mp[1] + yy
-        self.jeg = np.arange(q,2*q)
+        self.jeg = np.arange(q, 2*q)
 
         # north edge
         pts[0, 2*q:3*q] = mp[0] + xx[::-1]
         pts[1, 2*q:3*q] = self.ne_c[1]
-        self.jng = np.arange(2*q,3*q)
-        
+        self.jng = np.arange(2*q, 3*q)
+
         # west edge
         pts[0, 3*q:4*q] = self.sw_c[0]
         pts[1, 3*q:4*q] = mp[1] + yy[::-1]
-        self.jwg = np.arange(3*q,4*q)
+        self.jwg = np.arange(3*q, 4*q)
 
         return pts
 
@@ -190,7 +191,7 @@ class Box(object):
         return L
 
     def build_ops(self):
-    	"""Generates ops for the box"""
+        """Generates ops for the box"""
         p = self._p
         D = chebdif(p, 1)
         D = D.reshape((p, p))
@@ -220,12 +221,12 @@ class Box(object):
         # Gauss to Cheb mapping
         P = self.interpolation(self.cheb_grid[0][:self._p],
                                self.gauss_grid[0][:self._q])
-        
-        self.P = np.kron(np.eye(4),P[:-1, :])
+
+        self.P = np.kron(np.eye(4), P[:-1, :])
 
         # Cheb to Gauss mapping
         self.Q = self.interpolation(self.gauss_grid[0][:self._q],
-                               self.cheb_grid[0][:self._p])
+                                    self.cheb_grid[0][:self._p])
 
         self.Y = X @ self.P
 
@@ -255,26 +256,29 @@ class Box(object):
 
 
 def test():
-	"""Tests the box class"""
+    """Tests the box class"""
     from ititree import potfn
-    a = Box((-0.5, -0.5), (0.5, 0.5), potfn, isLeaf=True)
+    a = Box((-0.5, -0.5), (0.5, 0.5), potfn, p=16, q=14, isLeaf=True)
     return a
-
-
-def test_interp():
-	"""Lagrange interpolation tester"""
-    j = np.arange(16) + 1
-    xt = ((np.cos(np.pi*(j-1)/8)[::-1]) + 1)/2.0
-    xs, _ = np.polynomial.legendre.leggauss(14)
-    xs = (xs+1)/2
-    ans = interpolation(xt, xs)
-    y = xs**2
-    yp = ans @ y
-    plt.plot(xs, y)
-    plt.plot(xt, yp, 'r')
-    plt.show()
-
 
 if __name__ == "__main__":
     a = test()
-    test_interp()
+
+# def test_interp():
+#     """Lagrange interpolation tester"""
+#     a = 
+#     j = np.arange(16) + 1
+#     xt = ((np.cos(np.pi*(j-1)/8)[::-1]) + 1)/2.0
+#     xs, _ = np.polynomial.legendre.leggauss(14)
+#     xs = (xs+1)/2
+#     ans = interpolation(xt, xs)
+#     y = xs**2
+#     yp = ans @ y
+#     plt.plot(xs, y)
+#     plt.plot(xt, yp, 'r')
+#     plt.show()
+
+
+ 
+# if __name__ == "__main__":
+    # test_interp()

@@ -15,7 +15,10 @@ def main():
 	Tint = build_sol(a)
 	u = {}
 	solveBVP(a, in_.f, u)
-	print(u)
+	b = SqDomain(a, 16, 224)
+	us = b.solve(Tint, in_.u_in, in_.grad_u_in)
+
+
 
 if __name__ == '__main__':
 	main()
