@@ -16,7 +16,7 @@ def main():
 	u = {}
 	solveBVP(a, in_.f, u)
 	b = SqDomain(a, 16, 224)
-	us = b.solve(Tint, in_.u_in, in_.grad_u_in)
+	us = b.solve(Tint, in_)
 
 
 

@@ -24,13 +24,13 @@ class SqDomain(object):
     """
 
     def __init__(self, btree, npanels, nptsonbdry):
-        self.swc = btree.root.sw_c
-        self.nec = btree.root.ne_c
+        self.swc = btree.root.sw_c[0]+1j*btree.root.sw_c[1]
+        self.nec = btree.root.ne_c[0]+1j*btree.root.ne_c[1]
         self._p = npanels
+        self.__prepped = False
         self._N = nptsonbdry
         self.n = int(np.ceil(self._N/self._p))
         self.curvquad()
-        return self
 
     def gamma(self, s):
         q = np.pi/2
@@ -43,6 +43,7 @@ class SqDomain(object):
                        side + side*1j*(s/q-1) + self.swc,
                        side*1j + side*(3-s/q) + self.swc,
                        side*1j*(4-s/q) + self.swc]
+
         a = np.where(conditions, return_vals, 0).sum(axis=0)
         return a
 
@@ -53,10 +54,11 @@ class SqDomain(object):
                       np.logical_and(s >= q, s < 2*q),
                       np.logical_and(s >= 2*q, s < 3*q),
                       s >= 3*q]
-        return_vals = [side*1/q,
-                       side*1j/q,
-                       side*-1/q,
-                       side*-1j/q]
+        return_vals = [side*np.ones_like(s)/q,
+                       side*np.ones_like(s)*1j/q,
+                       side*np.ones_like(s)*-1/q,
+                       side*np.ones_like(s)*-1j/q]
+
         a = np.where(conditions, return_vals, 0).sum(axis=0)
         return a
 
@@ -69,6 +71,7 @@ class SqDomain(object):
         pts = pts*0.5 + 0.5
         w /= 2
         se = 2*np.pi/n*np.arange(0, n+1)
+        print(w.shape)
         self.weights = np.tile(w*2*np.pi/n, (n, 1))
         s = np.zeros(n*p)
         for i in range(n):
@@ -77,56 +80,64 @@ class SqDomain(object):
         self.s = s
         self.x = self.gamma(s)
         self.__sp = self.gammap(s)
-        self.sp = abs(self.__sp)
+        self.sp = np.abs(self.__sp)
         self.normals = -1j*self.__sp/self.sp
         return None
 
-    def prep_operator(self,k,Tint):
-        A = np.eye(self.__N)/2
+    def prep_operator(self, k, Tint):
+        A = np.eye(self._N)/2
         dv = self.x - self.x[:, None]
         d = np.abs(dv)
-        self.costheta = np.real(np.conj(G.normals) @ dv)/d
+        np.fill_diagonal(d, 1)
+        self.costheta = np.real(np.conj(self.normals) @ dv)/d
         d *= k
-        
-        # $$ \dfrac{\partial H_n^{(1)}(z)}{\partial z} = 
+
+        # $$ \dfrac{\partial H_n^{(1)}(z)}{\partial z} =
         # \dfrac{n H_n^{(1)}(z)}{z} - H_{n+1}^{(1)}(z)$$
-        
+
         # Kapur-Rokhlin correction
 
         # filling diagonal with 0s as per KR quad scheme
         D = -1j/4*fns.hankel1(1, d) @ self.costheta
-        D = np.fill_diagonal(D, 0) @ self.sp @ self.weights
-        
-        S = 1j/4*fns.hankel1(0,d)
-        S = np.fill_diagonal(S, 0) @ self.sp @ self.weights
+        np.fill_diagonal(D, 0)
+        print("D.shape: %s"%str(D.shape))
+        print("sp.shape: %s"%str(self.sp.shape))
+        print("weights.shape: %s"%str(self.weights.shape))
+        D = D @ self.sp @ self.weights
 
-        ## implementing a 6th order correction scheme here
+
+        S = 1j/4*fns.hankel1(0, d)
+        np.fill_diagonal(S, 0)
+        S = S @ self.sp @ self.weights
+
+        # implementing a 6th order correction scheme here
 
         # taken from Alex Barnett's MPSPack lib
         g6 = [4.967362978287758, -16.20501504859126, 25.85153761832639,
               -22.22599466791883, 9.930104998037539, -1.817995878141594]
 
-        corrections = np.ones((self.__N, self.__N))
-        for i in range(self.__N):
-            for j in range(1,7):
-                corrections[i][i-j] = g[j-1]
-                corrections[i][(i+j)%N] = g[j-1]
+        corrections = np.ones((self._N, self._N))
+        for i in range(self._N):
+            for j in range(1, 7):
+                corrections[i][i-j] = g6[j-1]
+                corrections[i][(i+j) % self._N] = g6[j-1]
+        print(S.shape)
+        print(corrections.shape)
         S *= corrections
         D *= corrections
 
         A += S @ Tint - D
-        
+
         self.S = S
         self.D = D
         self.A = A
 
         return A
 
-    def solve(self, Tint, u_in, grad_u_in):
+    def solve(self, Tint, domain):
+        k, u_in, grad_u_in = domain.k, domain.u_in, domain.grad_u_in
+        if not self.__prepped:
+            self.prep_operator(k, Tint)
         rhs = self.S @ (grad_u_in(self.x) @ self.costheta - Tint@u_in(self.x))
         soln = scipy.sparse.linalg.gmres(self.A, rhs, tol=1e-7, restart=20)
         return soln
-
-        
-
-
