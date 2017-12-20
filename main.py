@@ -18,6 +18,8 @@ def main():
 	b = SqDomain(a, 16, 224)
 	us = b.solve(Tint, in_)
 
+	print(us)
+
 
 
 if __name__ == '__main__':

@@ -71,8 +71,8 @@ class SqDomain(object):
         pts = pts*0.5 + 0.5
         w /= 2
         se = 2*np.pi/n*np.arange(0, n+1)
-        print(w.shape)
-        self.weights = np.tile(w*2*np.pi/n, (n, 1))
+        self.weights = np.tile(w*2*np.pi/n, n)
+
         s = np.zeros(n*p)
         for i in range(n):
             s[i*p:(i+1)*p] = se[i] + (se[i+1]-se[i])*pts
@@ -85,7 +85,7 @@ class SqDomain(object):
         return None
 
     def prep_operator(self, k, Tint):
-        A = np.eye(self._N)/2
+        A = np.eye(self._N, dtype='complex128')
         dv = self.x - self.x[:, None]
         d = np.abs(dv)
         np.fill_diagonal(d, 1)
@@ -100,10 +100,8 @@ class SqDomain(object):
         # filling diagonal with 0s as per KR quad scheme
         D = -1j/4*fns.hankel1(1, d) @ self.costheta
         np.fill_diagonal(D, 0)
-        print("D.shape: %s"%str(D.shape))
-        print("sp.shape: %s"%str(self.sp.shape))
-        print("weights.shape: %s"%str(self.weights.shape))
-        D = D @ self.sp @ self.weights
+        print("weights shape: %s"%str(self.weights.shape))
+        D = D @ self.sp @ self.weights 
 
 
         S = 1j/4*fns.hankel1(0, d)
@@ -121,12 +119,12 @@ class SqDomain(object):
             for j in range(1, 7):
                 corrections[i][i-j] = g6[j-1]
                 corrections[i][(i+j) % self._N] = g6[j-1]
-        print(S.shape)
-        print(corrections.shape)
-        S *= corrections
-        D *= corrections
 
-        A += S @ Tint - D
+        S *= 2*corrections
+        D *= 2*corrections
+        # print(S.shape)
+
+        A += S @ Tint.astype('complex128') - D
 
         self.S = S
         self.D = D
