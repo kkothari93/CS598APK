@@ -89,7 +89,7 @@ class SqDomain(object):
         dv = self.x - self.x[:, None]
         d = np.abs(dv)
         np.fill_diagonal(d, 1)
-        self.costheta = np.real(np.conj(self.normals) @ dv)/d
+        self.costheta = np.real(np.conj(self.normals) * dv)/d
         d *= k
 
         # $$ \dfrac{\partial H_n^{(1)}(z)}{\partial z} =
@@ -100,13 +100,14 @@ class SqDomain(object):
         # filling diagonal with 0s as per KR quad scheme
         D = -1j/4*fns.hankel1(1, d) @ self.costheta
         np.fill_diagonal(D, 0)
-        print("weights shape: %s"%str(self.weights.shape))
-        D = D @ self.sp @ self.weights 
+        # print("weights shape: %s"%str(self.weights.shape))
+        D = D * self.sp * self.weights 
 
 
         S = 1j/4*fns.hankel1(0, d)
         np.fill_diagonal(S, 0)
-        S = S @ self.sp @ self.weights
+        S = S * self.sp * self.weights
+        # print(S)
 
         # implementing a 6th order correction scheme here
 
@@ -122,7 +123,6 @@ class SqDomain(object):
 
         S *= 2*corrections
         D *= 2*corrections
-        # print(S.shape)
 
         A += S @ Tint.astype('complex128') - D
 
@@ -137,5 +137,6 @@ class SqDomain(object):
         if not self.__prepped:
             self.prep_operator(k, Tint)
         rhs = self.S @ (grad_u_in(self.x) @ self.costheta - Tint@u_in(self.x))
+        # print(rhs)
         soln = scipy.sparse.linalg.gmres(self.A, rhs, tol=1e-7, restart=20)
         return soln

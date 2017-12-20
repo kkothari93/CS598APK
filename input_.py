@@ -14,7 +14,7 @@ class PlaneWave:
         return pts[0,:] + 1j*pts[1,:]
 
     def u_in(self, pts):
-        return np.exp(1j*self.k*self.w* pts)
+        return np.exp(1j*self.k*np.real(np.conj(self.w)*pts))
 
     def grad_u_in(self, pts):
         return 1j*self.k*self.w *self.u_in(pts)
