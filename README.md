@@ -8,5 +8,5 @@ I have been trying to implement this without much success. I will keep working o
 
 Eigenvalues of the ItI map of the root node:
 
-![Eigenvalues][/eigen_R.png]
+![Eigenvalues][CS598APK/eigen_R.png]
 
