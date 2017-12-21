@@ -10,7 +10,9 @@ from iti import Box
 
 def potfn(x):
     """Insert fav potential function over domain here"""
-    return np.exp(-160*np.linalg.norm(x, axis=0)**2)
+    # return np.exp(-160*np.linalg.norm(x, axis=0)**2)
+
+    return np.zeros_like(x[0])
 
 
 class BoxTree(object):
@@ -219,6 +221,7 @@ def build_sol(a):
     root = a.BoxList[0].root
     I = np.eye(len(root.R))
     Tint = -1j*root.k*np.linalg.inv(root.R - I) @ (root.R + I)
+    
     return Tint
 
 
@@ -245,7 +248,7 @@ def solveBVP(a, f, u):
     return None
 
 
-def plot_solution(a, u):
+def plot_solution(a, u,in_):
     # TODO: BUGGY!!
     import matplotlib.pyplot as plt
     from mpl_toolkits.mplot3d import Axes3D
@@ -259,11 +262,13 @@ def plot_solution(a, u):
         if box.isLeaf:
             utemp = u[box.id_]
             pos = box.root.cheb_grid
+            # utemp = in_.u_in(pos)
+            # print(utemp.shape)
             ax.plot_trisurf(pos[0, :],
                          pos[1, :],
                          utemp.real,
                          cmap=cm.jet,
-                         vmin=-80, vmax=70, shade=True)
+                         vmin=-1, vmax=1, shade=True)
 
     plt.show()
 

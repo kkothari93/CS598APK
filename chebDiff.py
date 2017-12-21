@@ -130,6 +130,7 @@ def chebdif(N,M):
         D[range(N),range(N)]= -np.sum(D,axis=1)        # negative sum trick
         DM[ell,:,:] = D                                # store current D in DM
 
+
     return DM
 
 if __name__ == '__main__':

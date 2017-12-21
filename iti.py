@@ -128,34 +128,14 @@ class Box(object):
             | A_ib | A_ii |
 
         """
+
         p = int(np.sqrt(len(A)))
         assert p == self._p
 
-        # first find the corner indices
-        js = np.arange(p-1)
-        je = np.arange(1, p)*p - 1
-        jn = (p-1)*p + np.arange(p-1, 0, -1)
-        jw = np.arange(p-1, 0, -1)*p
+        # get permuted id's
+        ids = self.__permute_ids()
 
-        jb = np.concatenate((js, je, jn, jw))
-        # print(jb)
-
-        # now find interior indices
-        ji = [i*p+j for i in range(1, p-1) for j in range(1, p-1)]
-        ji = np.array(ji)
-
-        temp = np.zeros_like(A)
-        # row permute
-        temp[:len(jb), :len(jb)] = A[np.ix_(jb, jb)]
-        temp[:len(jb), len(jb):] = A[np.ix_(jb, ji)]
-        temp[len(jb):, :len(jb)] = A[np.ix_(ji, jb)]
-        temp[len(jb):, len(jb):] = A[np.ix_(ji, ji)]
-
-        A = temp
-
-        del temp
-
-        return A
+        return A[np.ix_(ids, ids)]
 
     def interpolation(self, xt, xs, eps=1e-10):
         """Constructs the interpolation matrix 
@@ -190,13 +170,53 @@ class Box(object):
 
         return L
 
+    def __permute_ids(self):
+        p = self._p
+        ids = np.arange(p, dtype=int) #0,1,...,p-1
+        j = np.arange(1,p, dtype= int)+1 
+        ids = np.concatenate((ids, j*p-1)) #2p-1,3p-1,...,p**2-1
+        ids = np.concatenate((ids, p*p-j)) #p**2-2,p**2-3,...,p**2-p
+        ids = np.concatenate((ids, np.arange(p-2,0,-1, dtype=int)*p))
+
+        ids = np.concatenate((ids, np.zeros((p-2)**2, dtype=int)))
+
+        for i in range(p-2):
+            for j in range(p-2):
+                ids[4*(p-1) + i*(p-2) + j] = (i+1)*p + j+1
+
+        return ids
+
+
+    def _cons_in_x(self):
+        return 3*self.cheb_grid[1,:]
+
+    def _cons_in_y(self):
+        return 3*self.cheb_grid[0,:] 
+
     def build_ops(self):
         """Generates ops for the box"""
         p = self._p
+        # chebdif tested with _cons_in_x/y functions
+        # works well
         D = chebdif(p, 1)
         D = D.reshape((p, p))
-        Dx = self._permute(np.kron(np.eye(p), D))/abs(self.hx)
-        Dy = self._permute(np.kron(D, np.eye(p)))/abs(self.hy)
+
+
+        # D on chebyshev points
+        # https://www.nada.kth.se/~olofr/Approx/BarycentricLagrange.pdf
+        # !! DOES NOT WORK: DON'T KNOW WHY !! :(
+        # delj = np.ones(p)
+        # delj[0] = delj[-1] = 0.5
+        # j = np.arange(p)+1
+        # x = np.cos(np.pi*(j-1)/(p-1))[::-1]
+        # w = (-1)**j * delj
+        # dij = x - x[:, None]
+        # np.fill_diagonal(dij, 1.0)
+        # D = np.outer(1/w, w) * 1/dij
+        # # print(np.diag(D))
+
+        Dx = self._permute(np.kron(np.eye(p), D))/self.hx
+        Dy = self._permute(np.kron(D, np.eye(p)))/self.hy
         DD = self._permute(np.diag(self.k**2 * (1 - self.pot(self.cheb_grid))))
 
         # wave operator
@@ -208,6 +228,7 @@ class Box(object):
 
         # Outgoing impedance operator
         F = N + 1j*self.k * np.eye(p*p)[self.jb, :]
+
 
         # linear system
         B = np.vstack((F, A[self.ji, :]))
@@ -230,6 +251,7 @@ class Box(object):
 
         self.Y = X @ self.P
 
+
         # gauss will use both end points
         jsp = np.append(self.js, self.je[0])
         jep = np.append(self.je, self.jn[0])
@@ -240,6 +262,7 @@ class Box(object):
                        Dx[jwp, :])) - 1j*self.k*np.eye(p*p)[jbp, :]
 
         self.R = np.kron(np.eye(4), self.Q) @ G @ self.Y
+        print(np.linalg.norm(self.R))
 
         return
 

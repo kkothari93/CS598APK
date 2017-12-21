@@ -13,13 +13,15 @@ def main():
 	in_ = PlaneWave(40, np.array([1+0j]))
 	a = BoxTree((-0.5, -0.5), (0.5, 0.5))
 	Tint = build_sol(a)
-	u = {}
-	solveBVP(a, in_.f, u)
-	plot_solution(a,u)
+	print(Tint)
+
+	# u = {}
+	# solveBVP(a, in_.f, u)
+	# plot_solution(a,u, in_)
 	b = SqDomain(a, 16, 224)
 	us = b.solve(Tint, in_)
 
-	print(us)
+	# print(us)
 
 
 

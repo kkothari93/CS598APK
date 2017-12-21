@@ -130,6 +130,8 @@ class SqDomain(object):
         self.D = D
         self.A = A
 
+        self.Text = np.linalg.inv(S) @ (D-np.eye(len(D))/2)
+
         return A
 
     def solve(self, Tint, domain):
@@ -138,10 +140,10 @@ class SqDomain(object):
             self.prep_operator(k, Tint)
         self.ui = u_in(self.x)
         self.uin = grad_u_in(self.x)
-        rhs = self.S @ ( @ self.costheta - Tint@ self.ui)
+        rhs = self.S @ ( self.uin @ self.costheta - Tint@ self.ui)
         # print(rhs)
         soln = scipy.sparse.linalg.gmres(self.A, rhs, tol=1e-7, restart=20)
         self.us = soln
         self.usn = Tint @ (self.ui + self.us) - self.uin
-        
+
         return soln
