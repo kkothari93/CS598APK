@@ -136,7 +136,12 @@ class SqDomain(object):
         k, u_in, grad_u_in = domain.k, domain.u_in, domain.grad_u_in
         if not self.__prepped:
             self.prep_operator(k, Tint)
-        rhs = self.S @ (grad_u_in(self.x) @ self.costheta - Tint@u_in(self.x))
+        self.ui = u_in(self.x)
+        self.uin = grad_u_in(self.x)
+        rhs = self.S @ ( @ self.costheta - Tint@ self.ui)
         # print(rhs)
         soln = scipy.sparse.linalg.gmres(self.A, rhs, tol=1e-7, restart=20)
+        self.us = soln
+        self.usn = Tint @ (self.ui + self.us) - self.uin
+        
         return soln

@@ -15,6 +15,7 @@ def main():
 	Tint = build_sol(a)
 	u = {}
 	solveBVP(a, in_.f, u)
+	plot_solution(a,u)
 	b = SqDomain(a, 16, 224)
 	us = b.solve(Tint, in_)
 
@@ -24,6 +25,3 @@ def main():
 
 if __name__ == '__main__':
 	main()
-
-
-

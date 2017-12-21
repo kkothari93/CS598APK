@@ -142,7 +142,6 @@ class BoxTree(object):
                     (beta.root.jsg, beta.root.jeg, beta.root.jng))
                 self.j3b = beta.root.jwg
 
-                
                 self.pts = np.concatenate((
                     alpha.pts[:, alpha.root.jsg],
                     beta.pts[:, beta.root.jsg],
@@ -159,7 +158,7 @@ class BoxTree(object):
                 self.j2b = np.concatenate(
                     (beta.root.jeg, beta.root.jng, beta.root.jwg))
                 self.j3b = beta.root.jsg
-            
+
                 self.pts = np.concatenate((
                     alpha.pts[:, alpha.root.jsg],
                     alpha.pts[:, alpha.root.jeg],
@@ -230,7 +229,7 @@ def solveBVP(a, f, u):
             u[box.id_] = box.root.Y @ box.fT
 
         else:
-            if box.id_==0:
+            if box.id_ == 0:
                 box.f1a = f(box.pts[:, box.j1a])
                 box.f2b = f(box.pts[:, box.j2b])
                 box.fT = np.concatenate((box.f1a, box.f2b), axis=0)
@@ -246,20 +245,27 @@ def solveBVP(a, f, u):
     return None
 
 
-def plot_solution(a,u):
+def plot_solution(a, u):
     # TODO: BUGGY!!
     import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d import Axes3D
+    from matplotlib import cm
 
-    fig, ax = plt.subplots()
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    # ax = fig.gca()
+
     for box in a.BoxList:
         if box.isLeaf:
             utemp = u[box.id_]
             pos = box.root.cheb_grid
-            print(pos[0,:])
-            plt.contourf(pos[0,:], pos[1,:], utemp.real.reshape(16,16))
+            ax.plot_trisurf(pos[0, :],
+                         pos[1, :],
+                         utemp.real,
+                         cmap=cm.jet,
+                         vmin=-80, vmax=70, shade=True)
 
     plt.show()
-
 
 
 def test():
