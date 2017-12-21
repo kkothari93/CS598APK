@@ -7,5 +7,5 @@ The repo implements some work by Gillman, Barnett and Martinsson on solving vari
 I have been trying to implement this without much success. I will keep working on it. I will post results as I have them. To show that the merge process creates a resonable unitary operator, $$R_0$$, I post the eighenvalues of the same.
 
 Eigenvalues of the ItI map of the root node:
-![Eigenvalues of the ItI map of the root node][eigen-R.png]
+![Eigenvalues of the ItI map of the root node][eigen_R.png]
 
