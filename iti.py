@@ -239,6 +239,9 @@ class Box(object):
             np.zeros(((p-2)**2, 4*p-4)))
         )
 
+        # plt.imshow(X.real, vmin=X.real.min(), vmax=X.real.max(), interpolation='nearest')
+        # plt.show()
+
         # Gauss to Cheb mapping
         P = self.interpolation(self.cheb_grid[0][:self._p],
                                self.gauss_grid[0][:self._q])
@@ -262,7 +265,7 @@ class Box(object):
                        Dx[jwp, :])) - 1j*self.k*np.eye(p*p)[jbp, :]
 
         self.R = np.kron(np.eye(4), self.Q) @ G @ self.Y
-        print(np.linalg.norm(self.R))
+
 
         return
 

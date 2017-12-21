@@ -219,9 +219,15 @@ def build_sol(a):
             box.merge()
 
     root = a.BoxList[0].root
+    eigvals = np.linalg.eigvals(root.R)
+
+    plt.scatter(eigvals.real, eigvals.imag)
+    plt.xlabel('$Re(\lambda_{R^0})$')
+    plt.ylabel('$Im(\lambda_{R^0})$')
+    plt.show()
     I = np.eye(len(root.R))
     Tint = -1j*root.k*np.linalg.inv(root.R - I) @ (root.R + I)
-    
+
     return Tint
 
 

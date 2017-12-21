@@ -18,8 +18,8 @@ def main():
 	# u = {}
 	# solveBVP(a, in_.f, u)
 	# plot_solution(a,u, in_)
-	b = SqDomain(a, 16, 224)
-	us = b.solve(Tint, in_)
+	# b = SqDomain(a, 16, 224)
+	# us = b.solve(Tint, in_)
 
 	# print(us)
 
