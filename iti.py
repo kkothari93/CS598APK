@@ -280,8 +280,8 @@ class Box(object):
         jnp = np.append(self.jn, self.jw[0])
         jwp = np.append(self.jw, self.js[0])
         jbp = np.concatenate((jsp, jep, jnp, jwp))
-        G = np.vstack((-Dy[jsp, :], Dx[jep, :], Dy[jnp, :], -
-                       Dx[jwp, :])) - 1j*self.k*np.eye(p*p)[jbp, :]
+        G = np.vstack((-Dy[jsp, :], Dx[jep, :], Dy[jnp, :],
+                       -Dx[jwp, :])) - 1j*self.k*np.eye(p*p)[jbp, :]
 
         self.R = np.kron(np.eye(4), self.Q) @ G @ self.Y
 
@@ -310,12 +310,7 @@ def test():
     A = a.build_ops()
     q = 14
     R = a.R
-    normals = np.zeros((2,4*q))
-    normals[:,:q] = np.array([[0],[-1]]) 
-    normals[:,q:2*q] = np.array([[1],[0]]) 
-    normals[:,2*q:3*q] = np.array([[0],[1]]) 
-    normals[:,3*q:4*q] = np.array([[-1],[0]]) 
-    pts = a.gauss_grid
+    pts, normals = a.gauss_grid, a.normals
     print(np.real(in_.grad_u_in(pts)*np.conj(normals)))
     # print(np.linalg.eigvals(R))
     lhs = R @ in_.f(pts, normals)

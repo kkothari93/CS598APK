@@ -131,6 +131,11 @@ class BoxTree(object):
             alpha = self.a
             beta = self.b
 
+            # get number of nodes on each edge
+            ts = len(alpha.root.jsg)
+            te = len(alpha.root.jeg)
+            tn = len(alpha.root.jng)
+            tw = len(alpha.root.jwg)
 
             if not self.updown:
                 self.pts = np.concatenate((
@@ -147,21 +152,18 @@ class BoxTree(object):
                     beta.normals[:, beta.root.jng],
                     alpha.normals[:, alpha.root.jng],
                     alpha.normals[:, alpha.root.jwg]), axis=1)
-                
 
-                self.j1a = np.concatenate(
+
+                # indices of the R array
+                j1a = np.concatenate(
                     (alpha.root.jsg, alpha.root.jng, alpha.root.jwg))
-                self.j3a = alpha.root.jeg
+                j3a = alpha.root.jeg
 
-                self.j2b = np.concatenate(
+                j2b = np.concatenate(
                     (beta.root.jsg, beta.root.jeg, beta.root.jng))
-                self.j3b = beta.root.jwg
-                # indices in the pts arrray
-                ts = len(alpha.root.jsg)
-                te = len(alpha.root.jeg)
-                tn = len(alpha.root.jng)
-                tw = len(alpha.root.jwg)
+                j3b = beta.root.jwg
 
+                # indices in the pts arrray
                 self.jj1a = np.concatenate((
                     np.arange(ts, dtype=int),  # as
                     ts+ts+te+tn+np.arange(tn, dtype=int),
@@ -190,7 +192,7 @@ class BoxTree(object):
 
 
 
-                # index concat for R array
+                # indices of the R array
                 j1a = np.concatenate(
                     (alpha.root.jsg, alpha.root.jeg, alpha.root.jwg))
                 j3a = alpha.root.jng
@@ -199,14 +201,7 @@ class BoxTree(object):
                     (beta.root.jeg, beta.root.jng, beta.root.jwg))
                 j3b = beta.root.jsg
 
-
-
                 # indices in the pts arrray
-                ts = len(alpha.root.jsg)
-                te = len(alpha.root.jeg)
-                tn = len(alpha.root.jng)
-                tw = len(alpha.root.jwg)
-
                 self.jj1a = np.concatenate((
                     np.arange(ts, dtype=int),  # as
                     ts+np.arange(te, dtype=int),
