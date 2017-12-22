@@ -29,7 +29,7 @@ class Box(object):
             self._q = q  # Size of Gauss-grid
 
             self.cheb_grid = self._build_cheb_grid()
-            self.gauss_grid = self._build_gauss_edges()
+            self.gauss_grid, self.normals = self._build_gauss_edges()
         # self._plot_grid(self.cheb_grid)
 
         return
@@ -86,6 +86,11 @@ class Box(object):
     def _build_gauss_edges(self):
         """ Builds the edge gauss grid """
         q = self._q
+        ns = np.array([0,-1])
+        ne = np.array([1, 0])
+        nn = np.array([0, 1])
+        nw = np.array([-1, 0])
+
         x, _ = np.polynomial.legendre.leggauss(q)
 
         # scale to our case
@@ -95,29 +100,35 @@ class Box(object):
         xx = x/2*2*abs(self.hx)
         yy = x/2*2*abs(self.hy)
         pts = np.zeros((2, 4*q))
+        normals = np.zeros((2, 4*q))
+        
         mp = (self.sw_c+self.ne_c)/2
 
         # south edge
         pts[0, :q] = mp[0] + xx
         pts[1, :q] = self.sw_c[1]
+        normals[:,:q] = ns[:, None]
         self.jsg = np.arange(q)
 
         # east edge
         pts[0, q:2*q] = self.ne_c[0]
         pts[1, q:2*q] = mp[1] + yy
+        normals[:, q:2*q] = ne[:, None]
         self.jeg = np.arange(q, 2*q)
 
         # north edge
         pts[0, 2*q:3*q] = mp[0] + xx[::-1]
         pts[1, 2*q:3*q] = self.ne_c[1]
+        normals[:, 2*q:3*q] = nn[:, None]
         self.jng = np.arange(2*q, 3*q)
 
         # west edge
         pts[0, 3*q:4*q] = self.sw_c[0]
         pts[1, 3*q:4*q] = mp[1] + yy[::-1]
+        normals[:, 3*q:4*q] = nw[:, None]
         self.jwg = np.arange(3*q, 4*q)
 
-        return pts
+        return pts, normals
 
     def _permute(self, A):
         """
@@ -188,10 +199,13 @@ class Box(object):
 
 
     def _cons_in_x(self):
-        return 3*self.cheb_grid[1,:]
+        return 3*(self.cheb_grid[1,:])**2 
 
     def _cons_in_y(self):
-        return 3*self.cheb_grid[0,:] 
+        return 3*(self.cheb_grid[0,:])**2
+
+    def _harmonic(self):
+        return np.log(self._cons_in_x() + self._cons_in_y())
 
     def build_ops(self):
         """Generates ops for the box"""
@@ -221,6 +235,8 @@ class Box(object):
 
         # wave operator
         A = Dx @ Dx + Dy @ Dy + DD
+        # print((Dx @ Dx + Dy @ Dy) @ self._harmonic())
+
 
         # normal derivative
         N = np.vstack((-Dy[self.js, :], Dx[self.je, :],
@@ -239,8 +255,6 @@ class Box(object):
             np.zeros(((p-2)**2, 4*p-4)))
         )
 
-        # plt.imshow(X.real, vmin=X.real.min(), vmax=X.real.max(), interpolation='nearest')
-        # plt.show()
 
         # Gauss to Cheb mapping
         P = self.interpolation(self.cheb_grid[0][:self._p],
@@ -253,6 +267,11 @@ class Box(object):
                                     self.cheb_grid[0][:self._p])
 
         self.Y = X @ self.P
+
+        
+        # plt.imshow(self.Y.real, vmin=self.Y.real.min(), vmax=self.Y.real.max(), interpolation='nearest')
+        # plt.colorbar()
+        # plt.show()
 
 
         # gauss will use both end points
@@ -267,7 +286,8 @@ class Box(object):
         self.R = np.kron(np.eye(4), self.Q) @ G @ self.Y
 
 
-        return
+        return A
+
 
     def _plot_grid(self, grid):
         """Plot a grid of points with index label"""
@@ -284,8 +304,28 @@ class Box(object):
 def test():
     """Tests the box class"""
     from ititree import potfn
-    a = Box((-0.5, -0.5), (0.5, 0.5), potfn, p=16, q=14, isLeaf=True)
-    return a
+    from input_ import PlaneWave
+    in_ = PlaneWave(40, np.array([1+0j]))
+    a = Box((0.5, 0.5), (0.625, 0.625), potfn, p=16, q=14, isLeaf=True)
+    A = a.build_ops()
+    q = 14
+    R = a.R
+    normals = np.zeros((2,4*q))
+    normals[:,:q] = np.array([[0],[-1]]) 
+    normals[:,q:2*q] = np.array([[1],[0]]) 
+    normals[:,2*q:3*q] = np.array([[0],[1]]) 
+    normals[:,3*q:4*q] = np.array([[-1],[0]]) 
+    pts = a.gauss_grid
+    print(np.real(in_.grad_u_in(pts)*np.conj(normals)))
+    # print(np.linalg.eigvals(R))
+    lhs = R @ in_.f(pts, normals)
+    rhs = in_.g(pts, normals)
+    plt.scatter(lhs.real, lhs.imag, color='r')
+    plt.scatter(rhs.real, rhs.imag, color='b')
+    plt.show()
+    print(np.linalg.norm(lhs-rhs))
+    # print(A @ in_.u_in(a.cheb_grid))
+
 
 if __name__ == "__main__":
     a = test()

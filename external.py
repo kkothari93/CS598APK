@@ -101,8 +101,7 @@ class SqDomain(object):
         D = -1j/4*fns.hankel1(1, d) @ self.costheta
         np.fill_diagonal(D, 0)
         # print("weights shape: %s"%str(self.weights.shape))
-        D = D * self.sp * self.weights 
-
+        D = D * self.sp * self.weights
 
         S = 1j/4*fns.hankel1(0, d)
         np.fill_diagonal(S, 0)
@@ -132,6 +131,12 @@ class SqDomain(object):
 
         self.Text = np.linalg.inv(S) @ (D-np.eye(len(D))/2)
 
+        eigvals = np.linalg.eigvals(A)
+        plt.scatter(eigvals.real, eigvals.imag)
+        plt.xlabel("Re($\lambda$)")
+        plt.xlabel("Im($\lambda$)")
+        plt.show()
+
         return A
 
     def solve(self, Tint, domain):
@@ -140,7 +145,7 @@ class SqDomain(object):
             self.prep_operator(k, Tint)
         self.ui = u_in(self.x)
         self.uin = grad_u_in(self.x)
-        rhs = self.S @ ( self.uin @ self.costheta - Tint@ self.ui)
+        rhs = self.S @ (self.uin @ self.costheta - Tint@ self.ui)
         # print(rhs)
         soln = scipy.sparse.linalg.gmres(self.A, rhs, tol=1e-7, restart=20)
         self.us = soln

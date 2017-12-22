@@ -23,12 +23,15 @@ class PlaneWave:
             pts = self.__complexify(pts)
         return 1j*self.k*self.w *self.u_in(pts)
 
-    def f(self, pts):
+    def f(self, pts, normals):
         if pts.shape[0]==2:
             pts = self.__complexify(pts)
-        return self.u_in(pts) + 1j*self.k*self.grad_u_in(pts)
+            normals = self.__complexify(normals)
+        
+        return 1j*self.k*self.u_in(pts) + np.real(self.grad_u_in(pts)*np.conj(normals))
 
-    def g(self, pts):
+    def g(self, pts, normals):
         if pts.shape[0]==2:
             pts = self.__complexify(pts)
-        return self.u_in(pts) - 1j*self.k*self.grad_u_in(pts)
+            normals = self.__complexify(normals)
+        return -1j*self.k*self.u_in(pts) + np.real(self.grad_u_in(pts)*np.conj(normals))
