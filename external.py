@@ -131,11 +131,11 @@ class SqDomain(object):
 
         self.Text = np.linalg.inv(S) @ (D-np.eye(len(D))/2)
 
-        eigvals = np.linalg.eigvals(A)
-        plt.scatter(eigvals.real, eigvals.imag)
-        plt.xlabel("Re($\lambda$)")
-        plt.xlabel("Im($\lambda$)")
-        plt.show()
+        # eigvals = np.linalg.eigvals(A)
+        # plt.scatter(eigvals.real, eigvals.imag)
+        # plt.xlabel("Re($\lambda$)")
+        # plt.xlabel("Im($\lambda$)")
+        # plt.show()
 
         return A
 

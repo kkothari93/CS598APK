@@ -70,7 +70,7 @@ class Box(object):
         self.jn = np.arange(p-1) + 2*(p-1)
         self.jw = np.arange(p-1) + 3*(p-1)
 
-        self.jb = np.concatenate((self.js, self.je, self.jn, self.jw))
+        self.jb = np.arange(4*(p-1))
 
         # interior points
         for i in range(p-2):
@@ -86,7 +86,7 @@ class Box(object):
     def _build_gauss_edges(self):
         """ Builds the edge gauss grid """
         q = self._q
-        ns = np.array([0,-1])
+        ns = np.array([0, -1])
         ne = np.array([1, 0])
         nn = np.array([0, 1])
         nw = np.array([-1, 0])
@@ -101,13 +101,13 @@ class Box(object):
         yy = x/2*2*abs(self.hy)
         pts = np.zeros((2, 4*q))
         normals = np.zeros((2, 4*q))
-        
+
         mp = (self.sw_c+self.ne_c)/2
 
         # south edge
         pts[0, :q] = mp[0] + xx
         pts[1, :q] = self.sw_c[1]
-        normals[:,:q] = ns[:, None]
+        normals[:, :q] = ns[:, None]
         self.jsg = np.arange(q)
 
         # east edge
@@ -183,11 +183,11 @@ class Box(object):
 
     def __permute_ids(self):
         p = self._p
-        ids = np.arange(p, dtype=int) #0,1,...,p-1
-        j = np.arange(1,p, dtype= int)+1 
-        ids = np.concatenate((ids, j*p-1)) #2p-1,3p-1,...,p**2-1
-        ids = np.concatenate((ids, p*p-j)) #p**2-2,p**2-3,...,p**2-p
-        ids = np.concatenate((ids, np.arange(p-2,0,-1, dtype=int)*p))
+        ids = np.arange(p, dtype=int)  # 0,1,...,p-1
+        j = np.arange(1, p, dtype=int)+1
+        ids = np.concatenate((ids, j*p-1))  # 2p-1,3p-1,...,p**2-1
+        ids = np.concatenate((ids, p*p-j))  # p**2-2,p**2-3,...,p**2-p
+        ids = np.concatenate((ids, np.arange(p-2, 0, -1, dtype=int)*p))
 
         ids = np.concatenate((ids, np.zeros((p-2)**2, dtype=int)))
 
@@ -197,12 +197,11 @@ class Box(object):
 
         return ids
 
-
     def _cons_in_x(self):
-        return 3*(self.cheb_grid[1,:])**2 
+        return 3*(self.cheb_grid[1, :])**2
 
     def _cons_in_y(self):
-        return 3*(self.cheb_grid[0,:])**2
+        return 3*(self.cheb_grid[0, :])**2
 
     def _harmonic(self):
         return np.log(self._cons_in_x() + self._cons_in_y())
@@ -214,7 +213,6 @@ class Box(object):
         # works well
         D = chebdif(p, 1)
         D = D.reshape((p, p))
-
 
         # D on chebyshev points
         # https://www.nada.kth.se/~olofr/Approx/BarycentricLagrange.pdf
@@ -235,26 +233,28 @@ class Box(object):
 
         # wave operator
         A = Dx @ Dx + Dy @ Dy + DD
-        # print((Dx @ Dx + Dy @ Dy) @ self._harmonic())
 
+        # uncomment to test the operators
+        # print((Dx @ Dx + Dy @ Dy) @ self._harmonic())
 
         # normal derivative
         N = np.vstack((-Dy[self.js, :], Dx[self.je, :],
                        Dy[self.jn, :], -Dx[self.jw, :]))
+        # print("N.shape %s" % str(N.shape))
 
         # Outgoing impedance operator
         F = N + 1j*self.k * np.eye(p*p)[self.jb, :]
-
+        # print("F.shape %s" % str(F.shape))
 
         # linear system
         B = np.vstack((F, A[self.ji, :]))
+        # print("B.shape %s" % str(B.shape))
 
         # Solution matrix
         X = np.linalg.inv(B) @ np.vstack((
             np.eye(4*p-4),
             np.zeros(((p-2)**2, 4*p-4)))
         )
-
 
         # Gauss to Cheb mapping
         P = self.interpolation(self.cheb_grid[0][:self._p],
@@ -263,16 +263,20 @@ class Box(object):
         self.P = np.kron(np.eye(4), P[:-1, :])
 
         # Cheb to Gauss mapping
-        self.Q = self.interpolation(self.gauss_grid[0][:self._q],
-                                    self.cheb_grid[0][:self._p])
+        Q = self.interpolation(self.gauss_grid[0][:self._q],
+                               self.cheb_grid[0][:self._p])
+
+        # test interpolation
+        # t = self.Q @ P
+        # t -= np.eye(len(t))
+        # print(np.linalg.norm(t,ord=2))
 
         self.Y = X @ self.P
 
-        
-        # plt.imshow(self.Y.real, vmin=self.Y.real.min(), vmax=self.Y.real.max(), interpolation='nearest')
+        # plt.imshow(self.Y.real, vmin=self.Y.real.min(),
+        #            vmax=self.Y.real.max(), interpolation='nearest')
         # plt.colorbar()
         # plt.show()
-
 
         # gauss will use both end points
         jsp = np.append(self.js, self.je[0])
@@ -280,14 +284,13 @@ class Box(object):
         jnp = np.append(self.jn, self.jw[0])
         jwp = np.append(self.jw, self.js[0])
         jbp = np.concatenate((jsp, jep, jnp, jwp))
+
         G = np.vstack((-Dy[jsp, :], Dx[jep, :], Dy[jnp, :],
                        -Dx[jwp, :])) - 1j*self.k*np.eye(p*p)[jbp, :]
 
-        self.R = np.kron(np.eye(4), self.Q) @ G @ self.Y
-
+        self.R = np.kron(np.eye(4), Q) @ G @ self.Y
 
         return A
-
 
     def _plot_grid(self, grid):
         """Plot a grid of points with index label"""
@@ -311,23 +314,17 @@ def test():
     q = 14
     R = a.R
     pts, normals = a.gauss_grid, a.normals
-    print(np.real(in_.grad_u_in(pts)*np.conj(normals)))
     # print(np.linalg.eigvals(R))
     lhs = R @ in_.f(pts, normals)
     rhs = in_.g(pts, normals)
     plt.scatter(lhs.real, lhs.imag, color='r')
     plt.scatter(rhs.real, rhs.imag, color='b')
     plt.show()
-    print(np.linalg.norm(lhs-rhs))
     # print(A @ in_.u_in(a.cheb_grid))
-
-
-if __name__ == "__main__":
-    a = test()
 
 # def test_interp():
 #     """Lagrange interpolation tester"""
-#     a = 
+#     a =
 #     j = np.arange(16) + 1
 #     xt = ((np.cos(np.pi*(j-1)/8)[::-1]) + 1)/2.0
 #     xs, _ = np.polynomial.legendre.leggauss(14)
@@ -339,7 +336,10 @@ if __name__ == "__main__":
 #     plt.plot(xt, yp, 'r')
 #     plt.show()
 
-
- 
-# if __name__ == "__main__":
+if __name__ == "__main__":
+    a = test()
     # test_interp()
+
+
+
+
